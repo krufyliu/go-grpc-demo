@@ -2,8 +2,27 @@
 
 all: server client
 
-proto: api/*.proto
-	protoc -I api --go_out=plugins=grpc:api api/*.proto
+api/api.pb.go: api/api.proto
+	protoc -I api/ \
+	-I${GOPATH}/src \
+	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+	--go_out=plugins=grpc:api \
+	api/api.proto
+
+api/api.pb.gw.go: api/api.proto
+	protoc -I api/ \
+    -I${GOPATH}/src \
+    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    --grpc-gateway_out=logtostderr=true:api \
+    api/api.proto
+api/api.swagger.json:
+	protoc -I api/ \
+  	-I${GOPATH}/src \
+  	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  	--swagger_out=logtostderr=true:api \
+  	api/api.proto
+
+api: api/api.pb.go api/api.pb.gw.go api/api.swagger.json
 
 client: client/main.go
 	go build -o build/client client/main.go
